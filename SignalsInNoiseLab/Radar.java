@@ -62,17 +62,6 @@ public class Radar
         // detect the monster
         currentScan[monsterLocationRow][monsterLocationCol] = true;
         
-       // my work
-        int a= monsterLocationRow;
-        int b= monsterLocationCol;
-        while (a<=96 && b<=96)
-        {
-           a+=3;
-           b+=3;
-           currentScan[a][b]=true;
-        }
-        // ends here
-        
         // inject noise into the grid
         injectNoise();
         
