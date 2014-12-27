@@ -1,84 +1,168 @@
+import java.util.ArrayList;
+import java.util.*;
 /**
- * The model for radar scan and accumulator
+ * The model for radar scan and accumulator, viewer and component are not required for this lab, the tester class exams whether class Rador works as expected.
  * 
- * @author @gcschmit
- * @version 19 July 2014
+ * @author @SamLin
+ * @version 12-23-2014
  */
 public class Radar
 {
-    
+
     // stores whether each cell triggered detection for the current scan of the radar
     private boolean[][] currentScan;
-    
-    // value of each cell is incremented for each scan in which that cell triggers detection 
-    private int[][] accumulator;
-    
+
     // location of the monster
     private int monsterLocationRow;
     private int monsterLocationCol;
 
     // probability that a cell will trigger a false detection (must be >= 0 and < 1)
     private double noiseFraction;
-    
+
     // number of scans of the radar since construction
     private int numScans;
 
-    /**
+    private int[] potentialRow;
+    private int[] potentialCol; 
+    
+    // creates a set of arraylists for later use.
+    private ArrayList<Integer> trueRow;
+    private ArrayList<Integer> trueCol;
+    private ArrayList<Integer> trueRow2;
+    private ArrayList<Integer> trueCol2;
+    private ArrayList<Integer> potentialDx;
+    private ArrayList<Integer> potentialDy;
+    private ArrayList<Integer> differenceTable;
+    
+    private int dy = 0;
+    private int dx = 0;
+
+
+    /** 
      * Constructor for objects of class Radar
      * 
      * @param   rows    the number of rows in the radar grid
      * @param   cols    the number of columns in the radar grid
+     * @param   dx      change of cols
+     * @param   dy      change of rows
+     * @param   mrow    initial row of the monster
+     * @param   mcol    initial col of the monster
      */
-    public Radar(int rows, int cols)
+
+    public Radar(int rows, int cols,int dx, int dy, int mRow, int mCol)
     {
         // initialize instance variables
         currentScan = new boolean[rows][cols]; // elements will be set to false
-        accumulator = new int[rows][cols]; // elements will be set to 0
-        
-        // randomly set the location of the monster (can be explicity set through the
-        //  setMonsterLocation method
-        monsterLocationRow = (int)(Math.random() * rows);
-        monsterLocationCol = (int)(Math.random() * cols);
-        
-        noiseFraction = 0.05;
+
+        noiseFraction = 0.01;
         numScans= 0;
+        
+        for(int row = 0; row < currentScan.length; row++)
+        {
+            for(int col = 0; col < currentScan[0].length; col++)
+            {
+                {
+                    currentScan[row][col]=false;
+                }
+            }
+        }
+        injectNoise();
+        setMonsterLocation();
+
+        potentialRow = new int[11];
+        potentialCol = new int[11];
+
+        trueRow = new ArrayList<Integer>();
+        trueCol = new ArrayList<Integer>();
+        trueRow2 = new ArrayList<Integer>();
+        trueCol2 = new ArrayList<Integer>();
+        potentialDx = new ArrayList<Integer>();
+        potentialDy = new ArrayList<Integer>();
+
+        this.monsterLocationRow = mRow;
+        this.monsterLocationCol = mCol;
+
+        this.dy = dy;
+        this.dx = dx;
+        
+        this.differenceTable = new ArrayList<Integer>();
+
+
     }
-    
+
     /**
      * Performs a scan of the radar. Noise is injected into the grid and the accumulator is updated.
      * 
      */
     public void scan()
     {
-        // zero the current scan grid
-        for(int row = 0; row < currentScan.length; row++)
-        {
-            for(int col = 0; col < currentScan[0].length; col++)
-            {
-                currentScan[row][col] = false;
-            }
-        }
-        
-        // detect the monster
-        currentScan[monsterLocationRow][monsterLocationCol] = true;
-        
+        boolean [][] oldScan = new boolean [100][100];
         // inject noise into the grid
-        injectNoise();
-        
-        // udpate the accumulator
         for(int row = 0; row < currentScan.length; row++)
         {
             for(int col = 0; col < currentScan[0].length; col++)
             {
                 if(currentScan[row][col] == true)
                 {
-                   accumulator[row][col]++;
+                    oldScan[row][col]=true;
                 }
             }
         }
         
-        // keep track of the total number of scans
-        numScans++;
+        for(int row = 0; row < currentScan.length; row++)
+        {
+            for(int col = 0; col < currentScan[0].length; col++)
+            {
+                {
+                    currentScan[row][col]=false;
+                }
+            }
+        }
+        
+        injectNoise();
+        setMonsterLocation();
+        
+     
+        for(int row = 0; row < oldScan.length; row++)
+        {
+            for(int col = 0; col < oldScan[0].length; col++)
+            {
+                if(oldScan[row][col] == true)
+                {
+                    this.trueRow.add(row);  
+                    this.trueCol.add(col);                   
+                }
+            }
+        }
+        
+        for(int row = 0; row < currentScan.length; row++)
+        {
+            for(int col = 0; col < currentScan[0].length; col++)
+            {
+                if(currentScan[row][col] == true)
+                {
+                    this.trueRow2.add(row);  
+                    this.trueCol2.add(col);                   
+                }
+            }
+        }
+        
+         int currentSize = 0;
+        for (int a=0 ; a<trueRow.size(); a++)
+        {
+            for (int b=0 ; b<trueRow2.size(); b++)
+            {
+                int changeX = trueCol2.get(b)-trueCol.get(a);
+                int changeY = trueRow2.get(b)-trueRow.get(a);
+                if (Math.abs(changeY) <= 5 && Math.abs(changeX) <= 5)
+                {                   
+                    differenceTable.add(currentSize,changeX);
+                    differenceTable.add(currentSize,changeY);
+                    currentSize++;
+                }
+            }
+        }       
+        
     }
 
     /**
@@ -88,17 +172,20 @@ public class Radar
      * @param   col     the column in which the monster is located
      * @pre row and col must be within the bounds of the radar grid
      */
-    public void setMonsterLocation(int row, int col)
+
+    public void setMonsterLocation()
     {
-        // remember the row and col of the monster's location
-        monsterLocationRow = row;
-        monsterLocationCol = col;
-        
-        // update the radar grid to show that something was detected at the specified location
-        currentScan[row][col] = true;
+        if (monsterLocationRow + dy < 100 && monsterLocationCol + dx <100 &&
+            monsterLocationRow + dy > 0 && monsterLocationCol + dx > 0)
+        {
+            this.monsterLocationRow += this.dy;
+            this.monsterLocationCol += this.dx;
+            currentScan[monsterLocationRow][monsterLocationCol]=true;
+            numScans++ ; 
+        }
     }
-    
-     /**
+
+    /**
      * Sets the probability that a given cell will generate a false detection
      * 
      * @param   fraction    the probability that a given cell will generate a flase detection expressed
@@ -109,6 +196,20 @@ public class Radar
         noiseFraction = fraction;
     }
     
+    public void findTheSecret()
+    {
+        for (int i : differenceTable)
+        {
+            System.out.println(i);
+        }
+        
+        
+        
+        
+
+      
+    }
+
     /**
      * Returns true if the specified location in the radar grid triggered a detection.
      * 
@@ -120,21 +221,7 @@ public class Radar
     {
         return currentScan[row][col];
     }
-    
-    /**
-     * Returns the number of times that the specified location in the radar grid has triggered a
-     *  detection since the constructor of the radar object.
-     * 
-     * @param   row     the row of the location to query for accumulated detections
-     * @param   col     the column of the location to query for accumulated detections
-     * @return the number of times that the specified location in the radar grid has
-     *          triggered a detection since the constructor of the radar object
-     */
-    public int getAccumulatedDetection(int row, int col)
-    {
-        return accumulator[row][col];
-    }
-    
+
     /**
      * Returns the number of rows in the radar grid
      * 
@@ -144,7 +231,7 @@ public class Radar
     {
         return currentScan.length;
     }
-    
+
     /**
      * Returns the number of columns in the radar grid
      * 
@@ -154,7 +241,7 @@ public class Radar
     {
         return currentScan[0].length;
     }
-    
+
     /**
      * Returns the number of scans that have been performed since the radar object was constructed
      * 
@@ -164,7 +251,7 @@ public class Radar
     {
         return numScans;
     }
-    
+
     /**
      * Sets cells as falsely triggering detection based on the specified probability
      * 
@@ -183,6 +270,5 @@ public class Radar
             }
         }
     }
-    
-}
 
+}
