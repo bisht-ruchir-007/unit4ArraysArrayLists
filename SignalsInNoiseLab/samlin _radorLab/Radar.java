@@ -1,10 +1,10 @@
 import java.util.ArrayList;
 import java.util.*;
 /**
- * The model for radar scan and accumulator, viewer and component are not required for this lab, the tester class exams whether class Rador works as expected.
+ * The model for radar scan and accumulator
  * 
  * @author @SamLin
- * @version 12-23-2014
+ * @version 12-21-2014
  */
 public class Radar
 {
@@ -24,8 +24,7 @@ public class Radar
 
     private int[] potentialRow;
     private int[] potentialCol; 
-    
-    // creates a set of arraylists for later use.
+
     private ArrayList<Integer> trueRow;
     private ArrayList<Integer> trueCol;
     private ArrayList<Integer> trueRow2;
