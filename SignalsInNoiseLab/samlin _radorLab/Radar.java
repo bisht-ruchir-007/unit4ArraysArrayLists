@@ -180,7 +180,6 @@ public class Radar
             this.monsterLocationRow += this.dy;
             this.monsterLocationCol += this.dx;
             currentScan[monsterLocationRow][monsterLocationCol]=true;
-            numScans++ ; 
         }
     }
 
