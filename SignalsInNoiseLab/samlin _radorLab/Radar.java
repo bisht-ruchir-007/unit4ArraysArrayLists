@@ -1,10 +1,11 @@
 import java.util.ArrayList;
 import java.util.*;
 /**
- * The model for radar scan and accumulator
+ * The model for radar scan and accumulator, viewer and component are not required for this lab, the tester class exams whether class Rador works as expected.
  * 
  * @author @SamLin
- * @version 12-21-2014
+ * @version 12-23-2014
+ * I tried to be creative by doing the lab using both array and arraylists. 
  */
 public class Radar
 {
@@ -24,7 +25,8 @@ public class Radar
 
     private int[] potentialRow;
     private int[] potentialCol; 
-
+    
+    // creates a set of arraylists for later use.
     private ArrayList<Integer> trueRow;
     private ArrayList<Integer> trueCol;
     private ArrayList<Integer> trueRow2;
@@ -174,12 +176,15 @@ public class Radar
 
     public void setMonsterLocation()
     {
-        if (monsterLocationRow + dy < 100 && monsterLocationCol + dx <100 &&
-            monsterLocationRow + dy > 0 && monsterLocationCol + dx > 0)
+        if (monsterLocationRow + dy < 100 && monsterLocationRow + dy > 0)
         {
-            this.monsterLocationRow += this.dy;
-            this.monsterLocationCol += this.dx;
-            currentScan[monsterLocationRow][monsterLocationCol]=true;
+            if (monsterLocationCol + dx <100  && monsterLocationCol + dx > 0)
+            {
+               this.monsterLocationRow += this.dy;
+               this.monsterLocationCol += this.dx;
+               currentScan[monsterLocationRow][monsterLocationCol]=true;
+               numScans++ ; 
+            }
         }
     }
 
