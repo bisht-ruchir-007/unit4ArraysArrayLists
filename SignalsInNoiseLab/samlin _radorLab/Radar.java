@@ -1,16 +1,15 @@
 import java.util.ArrayList;
 import java.util.*;
 /**
- * The model for radar scan and accumulator, viewer and component are not required for this lab, the tester class exams whether class Rador works as expected.
+ * The model for radar scan and accumulator
  * 
- * @author @SamLin
- * @version 12-23-2014
- * I tried to be creative by doing the lab using both array and arraylists. 
+ * @author @Sam Lin
+ * @version 12-27-2014
  */
 public class Radar
 {
 
-    // stores whether each cell triggered detection for the current scan of the radar
+    // make a boolean two dimensional array to store the current scan
     private boolean[][] currentScan;
 
     // location of the monster
@@ -19,25 +18,20 @@ public class Radar
 
     // probability that a cell will trigger a false detection (must be >= 0 and < 1)
     private double noiseFraction;
-
-    // number of scans of the radar since construction
-    private int numScans;
-
-    private int[] potentialRow;
-    private int[] potentialCol; 
     
-    // creates a set of arraylists for later use.
-    private ArrayList<Integer> trueRow;
-    private ArrayList<Integer> trueCol;
-    private ArrayList<Integer> trueRow2;
-    private ArrayList<Integer> trueCol2;
-    private ArrayList<Integer> potentialDx;
-    private ArrayList<Integer> potentialDy;
-    private ArrayList<Integer> differenceTable;
-    
+    // monster's movement 
     private int dy = 0;
     private int dx = 0;
+    
+    // an arraylist for keeping for the potential comination of dx dy 
+    private ArrayList<ArrayList> differenceTable; 
 
+    // number of scans 
+    private int numScans = 0; 
+    
+    // constant determined rows and cols of the grid 
+    private final int ROW =100;
+    private final int COL =100;
 
     /** 
      * Constructor for objects of class Radar
@@ -50,14 +44,14 @@ public class Radar
      * @param   mcol    initial col of the monster
      */
 
-    public Radar(int rows, int cols,int dx, int dy, int mRow, int mCol)
+    public Radar(int rows, int cols,int dy, int dx, int mRow, int mCol)
     {
         // initialize instance variables
         currentScan = new boolean[rows][cols]; // elements will be set to false
 
-        noiseFraction = 0.01;
-        numScans= 0;
+        noiseFraction = 0.01;// possibility that a cell will become a noise  
         
+        // set all elements to false 
         for(int row = 0; row < currentScan.length; row++)
         {
             for(int col = 0; col < currentScan[0].length; col++)
@@ -67,26 +61,21 @@ public class Radar
                 }
             }
         }
+        // inject the noise 
         injectNoise();
+        // set monter's position 
         setMonsterLocation();
-
-        potentialRow = new int[11];
-        potentialCol = new int[11];
-
-        trueRow = new ArrayList<Integer>();
-        trueCol = new ArrayList<Integer>();
-        trueRow2 = new ArrayList<Integer>();
-        trueCol2 = new ArrayList<Integer>();
-        potentialDx = new ArrayList<Integer>();
-        potentialDy = new ArrayList<Integer>();
-
+ 
+        // initialize monster's position
         this.monsterLocationRow = mRow;
         this.monsterLocationCol = mCol;
-
+        
+        // initialize dx and dy
         this.dy = dy;
         this.dx = dx;
         
-        this.differenceTable = new ArrayList<Integer>();
+        // an arraylist of arraylist to store the potential dx and dy
+        differenceTable = new ArrayList<ArrayList>();
 
 
     }
@@ -97,8 +86,16 @@ public class Radar
      */
     public void scan()
     {
-        boolean [][] oldScan = new boolean [100][100];
-        // inject noise into the grid
+        // local arrays that store the rows and cols of the (n-1)th scan
+        ArrayList<Integer> trueRow = new ArrayList<Integer>();
+        ArrayList<Integer> trueCol = new ArrayList<Integer>();
+        // local arrays that store the rows and cols of the n-th scan
+        ArrayList<Integer> trueRow2 = new ArrayList<Integer>();
+        ArrayList<Integer> trueCol2 = new ArrayList<Integer>();
+        
+        // n-1 scan 
+        boolean [][] oldScan = new boolean [ROW][COL];
+
         for(int row = 0; row < currentScan.length; row++)
         {
             for(int col = 0; col < currentScan[0].length; col++)
@@ -110,6 +107,7 @@ public class Radar
             }
         }
         
+        // clear and reconstruct the currentScan 
         for(int row = 0; row < currentScan.length; row++)
         {
             for(int col = 0; col < currentScan[0].length; col++)
@@ -123,32 +121,34 @@ public class Radar
         injectNoise();
         setMonsterLocation();
         
-     
+        //store all the rows and cols of the true cells(noise and monster) in the (n-1)th scan in two arraylists
         for(int row = 0; row < oldScan.length; row++)
         {
             for(int col = 0; col < oldScan[0].length; col++)
             {
                 if(oldScan[row][col] == true)
                 {
-                    this.trueRow.add(row);  
-                    this.trueCol.add(col);                   
+                    trueRow.add(row);  
+                    trueCol.add(col);                   
                 }
             }
         }
-        
+       
+        //store all the rows and cols of the true cells(noise and monster) in the (n)th scan in two arraylists
         for(int row = 0; row < currentScan.length; row++)
         {
             for(int col = 0; col < currentScan[0].length; col++)
             {
                 if(currentScan[row][col] == true)
                 {
-                    this.trueRow2.add(row);  
-                    this.trueCol2.add(col);                   
+                    trueRow2.add(row);  
+                    trueCol2.add(col);                   
                 }
             }
         }
         
-         int currentSize = 0;
+        // compare and store all the number with abs less or equal to 5(the limit) in a local int arraylist
+        // then store all the arraylists in a big arraylist of arraylists
         for (int a=0 ; a<trueRow.size(); a++)
         {
             for (int b=0 ; b<trueRow2.size(); b++)
@@ -157,9 +157,10 @@ public class Radar
                 int changeY = trueRow2.get(b)-trueRow.get(a);
                 if (Math.abs(changeY) <= 5 && Math.abs(changeX) <= 5)
                 {                   
-                    differenceTable.add(currentSize,changeX);
-                    differenceTable.add(currentSize,changeY);
-                    currentSize++;
+                    ArrayList<Integer> changes = new ArrayList <Integer>(); 
+                    changes.add(changeY);
+                    changes.add(changeX);
+                    differenceTable.add(changes); 
                 }
             }
         }       
@@ -168,49 +169,57 @@ public class Radar
 
     /**
      * Sets the location of the monster
-     * 
-     * @param   row     the row in which the monster is located
-     * @param   col     the column in which the monster is located
-     * @pre row and col must be within the bounds of the radar grid
+     * use dx dy to increment the rows and cols accordingly 
      */
 
     public void setMonsterLocation()
     {
-        if (monsterLocationRow + dy < 100 && monsterLocationRow + dy > 0)
+        if (100-monsterLocationRow > dy && 100 - monsterLocationCol > dx
+            && dy > 0 - monsterLocationRow && dx > 0 - monsterLocationCol)
         {
-            if (monsterLocationCol + dx <100  && monsterLocationCol + dx > 0)
-            {
-               this.monsterLocationRow += this.dy;
-               this.monsterLocationCol += this.dx;
-               currentScan[monsterLocationRow][monsterLocationCol]=true;
-               numScans++ ; 
-            }
+            this.monsterLocationRow += this.dy;
+            this.monsterLocationCol += this.dx;
+            currentScan[monsterLocationRow][monsterLocationCol]=true;
         }
-    }
-
-    /**
-     * Sets the probability that a given cell will generate a false detection
-     * 
-     * @param   fraction    the probability that a given cell will generate a flase detection expressed
-     *                      as a fraction (must be >= 0 and < 1)
-     */
-    public void setNoiseFraction(double fraction)
-    {
-        noiseFraction = fraction;
     }
     
-    public void findTheSecret()
+    /**
+     * find the pre-determined dx and dy 
+     */
+    public void getDx_Dy()
     {
-        for (int i : differenceTable)
+        // int array that stores all the occurrences of a specific dy dx
+        int [] occurrences = new int [differenceTable.size()];        
+        int found =0; 
+        
+        // stores all the occurrences of a specific dy dx within the differenceTable in an int array
+        for (int i =0; i< differenceTable.size(); i++)
         {
-            System.out.println(i);
+            int occurrence = Collections.frequency(differenceTable,differenceTable.get(i));
+            occurrences[i]=occurrence;
         }
         
+        //find the index of the most frequently occurred combination of dy dx
         
+        int mostOften = occurrences[0];
+        for (int i=1; i< occurrences.length; i++)
+        {
+            if (occurrences[i]>mostOften)
+            {
+                mostOften = occurrences[i];
+                found = i;
+            }
+        }
         
-        
-
+        // print out the found dy dx 
+        System.out.println("Dy: "+differenceTable.get(found).get(0));
+        System.out.println("Dx: "+differenceTable.get(found).get(1));
       
+    }
+    
+    public void setNoiseFraction(double noise)
+    {
+        noiseFraction = noise; 
     }
 
     /**
