@@ -3,8 +3,8 @@ import javax.swing.JFrame;
 /**
  * Class that contains the main method for the program and creates the frame containing the component.
  * 
- * @author @gcschmit
- * @version 19 July 2014
+ * @author @Sam Lin
+ * @version 12-27-2014
  */
 public class RadarViewer
 {
@@ -18,7 +18,7 @@ public class RadarViewer
         final int ROWS = 100;
         final int COLS = 100;
         Radar radar = new Radar(ROWS, COLS,1,1,0,0);
-        radar.setNoiseFraction(0.0);
+        radar.setNoiseFraction(.02);
         radar.scan();
         
         JFrame frame = new JFrame();
@@ -41,7 +41,7 @@ public class RadarViewer
         // after each scan, instruct the Java Run-Time to redraw the window
         for(int i = 0; i < 100; i++)
         {
-            Thread.sleep(500); // sleep 100 milliseconds (1/10 second)
+            Thread.sleep(200); // sleep 100 milliseconds (1/10 second)
             
             radar.scan();
             
