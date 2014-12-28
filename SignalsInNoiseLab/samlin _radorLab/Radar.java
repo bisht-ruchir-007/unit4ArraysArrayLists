@@ -44,12 +44,10 @@ public class Radar
      * @param   mcol    initial col of the monster
      */
 
-    public Radar(int rows, int cols,int dy, int dx, int mRow, int mCol)
+    public Radar(int rows, int cols,int dy, int dx, int Row, int Col)
     {
         // initialize instance variables
         currentScan = new boolean[rows][cols]; // elements will be set to false
-
-        noiseFraction = 0.01;// possibility that a cell will become a noise  
         
         // set all elements to false 
         for(int row = 0; row < currentScan.length; row++)
@@ -65,10 +63,13 @@ public class Radar
         injectNoise();
         // set monter's position 
         setMonsterLocation();
- 
+        
+        // detect the monster 
+        currentScan[monsterLocationRow][monsterLocationCol]=true;
+        
         // initialize monster's position
-        this.monsterLocationRow = mRow;
-        this.monsterLocationCol = mCol;
+        this.monsterLocationRow = Row;
+        this.monsterLocationCol = Col;
         
         // initialize dx and dy
         this.dy = dy;
@@ -86,14 +87,18 @@ public class Radar
      */
     public void scan()
     {
-        // local arrays that store the rows and cols of the (n-1)th scan
+        // local arraylists that store the rows and cols of the old scan
+        // So I can use the .size() method instead of partially Filled array
         ArrayList<Integer> trueRow = new ArrayList<Integer>();
         ArrayList<Integer> trueCol = new ArrayList<Integer>();
-        // local arrays that store the rows and cols of the n-th scan
+        
+        // local arraylists that store the rows and cols of the new scan
+        // So I can use the .size() method instead of partially Filled array
         ArrayList<Integer> trueRow2 = new ArrayList<Integer>();
         ArrayList<Integer> trueCol2 = new ArrayList<Integer>();
         
-        // n-1 scan 
+        // oldScan 
+        // referred back to the createNextGeneration() method we did in the game of life lab 
         boolean [][] oldScan = new boolean [ROW][COL];
 
         for(int row = 0; row < currentScan.length; row++)
@@ -120,6 +125,7 @@ public class Radar
         
         injectNoise();
         setMonsterLocation();
+        currentScan[monsterLocationRow][monsterLocationCol]=true;
         
         //store all the rows and cols of the true cells(noise and monster) in the (n-1)th scan in two arraylists
         for(int row = 0; row < oldScan.length; row++)
@@ -153,34 +159,18 @@ public class Radar
         {
             for (int b=0 ; b<trueRow2.size(); b++)
             {
-                int changeX = trueCol2.get(b)-trueCol.get(a);
-                int changeY = trueRow2.get(b)-trueRow.get(a);
-                if (Math.abs(changeY) <= 5 && Math.abs(changeX) <= 5)
+                int xSpeed = trueCol2.get(b)-trueCol.get(a);
+                int ySpeed = trueRow2.get(b)-trueRow.get(a);
+                if (Math.abs(xSpeed) <= 5 && Math.abs(ySpeed) <= 5)
                 {                   
-                    ArrayList<Integer> changes = new ArrayList <Integer>(); 
-                    changes.add(changeY);
-                    changes.add(changeX);
-                    differenceTable.add(changes); 
+                    ArrayList<Integer> combinedyx = new ArrayList <Integer>(); 
+                    combinedyx.add(xSpeed);
+                    combinedyx.add(ySpeed);
+                    differenceTable.add(combinedyx); 
                 }
             }
         }       
         
-    }
-
-    /**
-     * Sets the location of the monster
-     * use dx dy to increment the rows and cols accordingly 
-     */
-
-    public void setMonsterLocation()
-    {
-        if (100-monsterLocationRow > dy && 100 - monsterLocationCol > dx
-            && dy > 0 - monsterLocationRow && dx > 0 - monsterLocationCol)
-        {
-            this.monsterLocationRow += this.dy;
-            this.monsterLocationCol += this.dx;
-            currentScan[monsterLocationRow][monsterLocationCol]=true;
-        }
     }
     
     /**
@@ -215,6 +205,19 @@ public class Radar
         System.out.println("Dy: "+differenceTable.get(found).get(0));
         System.out.println("Dx: "+differenceTable.get(found).get(1));
       
+    }
+    
+        /**
+     * Sets the location of the monster
+     * use dx dy to increment the rows and cols accordingly 
+     */
+
+    public void setMonsterLocation()
+    {
+        {
+            monsterLocationRow+=dy;
+            monsterLocationCol+=dx;        
+        }
     }
     
     public void setNoiseFraction(double noise)
